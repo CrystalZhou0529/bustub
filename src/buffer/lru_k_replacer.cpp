@@ -51,7 +51,9 @@ auto LRUKReplacer::Evict() -> std::optional<frame_id_t> {
   std::optional<frame_id_t> result = std::nullopt;
   for (auto &[frame_id, lruk_node] : node_store_) {
     auto &history = lruk_node.history_;
-    if (history.size() == 0 || !lruk_node.is_evictable_) continue;
+    if (history.empty() || !lruk_node.is_evictable_) {
+      continue;
+    }
     int kdist = history.size() == 1 ? std::numeric_limits<int>::max() : history.back() - history.front();
     if (kdist > max_kdist) {
       max_kdist = kdist;
@@ -94,9 +96,13 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType
     latch_.unlock();
     throw std::runtime_error("Weird things happened in RecordAccess!");
   }
-  if (node->second.history_.empty()) curr_size_++;
+  if (node->second.history_.empty()) {
+    curr_size_++;
+  }
   node->second.history_.push_back(current_timestamp_);
-  if (node->second.history_.size() > k_) node->second.history_.pop_front();
+  if (node->second.history_.size() > k_) {
+    node->second.history_.pop_front();
+  }
   current_timestamp_++;
   latch_.unlock();
 }
